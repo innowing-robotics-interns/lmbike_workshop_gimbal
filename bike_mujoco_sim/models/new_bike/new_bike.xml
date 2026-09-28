@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="new_bike">
+  <option timestep="0.0005" iterations="50" solver="Newton" tolerance="1e-10" integrator="RK4" cone="elliptic" />
+  <compiler angle="radian" eulerseq="XYZ" inertiafromgeom="false" />
+  <asset>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="512" height="512" />
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2" />
+    <mesh name="step_base_link" file="step_meshes/step_base_link.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_steering_link" file="step_meshes/step_steering_link.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_front_wheel" file="step_meshes/step_front_wheel.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_rear_wheel" file="step_meshes/step_rear_wheel.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_pdb" file="step_meshes/step_pdb.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_rpi" file="step_meshes/step_rpi.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_transformer" file="step_meshes/step_transformer.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_servo_power" file="step_meshes/step_servo_power.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_rpi_power" file="step_meshes/step_rpi_power.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_connection_accessory" file="step_meshes/step_connection_accessory.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_battery" file="step_meshes/step_battery.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_imu_fixing_left" file="step_meshes/step_imu_fixing_left.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_imu_fixing_right" file="step_meshes/step_imu_fixing_right.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_imu_wood_plate" file="step_meshes/step_imu_wood_plate.stl" scale="0.001 0.001 0.001" />
+    <mesh name="step_imu" file="step_meshes/step_imu.stl" scale="0.001 0.001 0.001" />
+  </asset>
+  <default>
+    <default class="visual">
+      <geom group="2" density="0" contype="0" conaffinity="0" />
+    </default>
+    <default class="body_collision">
+      <!-- Chassis / fork contact only; mass comes from inertial tags, not these geoms. -->
+      <geom group="1" density="0" rgba="0.2 0.85 0.35 0.22" friction="1.0 0.005 0.0001" contype="1" conaffinity="1" />
+    </default>
+    <default class="wheel_collision">
+      <geom type="ellipsoid" group="1" density="0" rgba="1 0.3 0.3 0.18" friction="1.0 0.005 0.0001" priority="1" margin="0" gap="0" solimp="0.0 0.95 0.001 0.5 2" solref="0.02 0.5" />
+    </default>
+  </default>
+  <worldbody>
+    <light directional="true" pos="-0.5 0.5 3" dir="0 0 -1" />
+    <geom name="floor" type="plane" pos="0 0 0" size="0 0 0.05" group="2" material="groundplane" friction="1.0 0.005 0.0001" />
+    <body name="base_link" pos="0 0 0.013458996338416">
+      <freejoint name="floating_base_joint" />
+      <!-- Mass and fullinertia scaled from CAD so the assembled bike is 2.2 kg (was 2.972 kg). -->
+      <inertial pos="-0.0479070535280551 0.00412123429227153 0.109833074572963" mass="1.357797739931641" fullinertia="0.006217166009236726 0.01475116389152273 0.01032372365967603 -0.0002147807969942261 -0.005310140734790905 -0.0001094762817563238" />
+      <camera name="chasis_camera" mode="track" pos="0 -1.2 0.25" euler="1.57079632679 0 0" />
+      <site name="imu_site" pos="-0.0382798029418301 0.00571605792879146 0.220843621068677" size="0.005" rgba="0.2 0.8 1 0" />
+      <geom name="base_link_geom" type="mesh" mesh="step_base_link" class="visual" />
+      <!-- Chassis only (kept clear of both wheels — oversized boxes self-collide and tip the bike). -->
+      <geom name="base_collision" class="body_collision" type="box" size="0.07 0.035 0.05" pos="-0.08 0.005 0.14" />
+      <body name="payload_power_distribution_board">
+        <inertial pos="0.0427986768549388 0.00448920136829811 0.224643653523616" mass="0.01554343967138706" fullinertia="2.82279354350594e-06 2.53876181299322e-06 4.731318136788171e-06 -7.191272725991262e-22 -3.473230716598691e-07 1.759563716178308e-21" />
+        <geom name="step_pdb_geom" type="mesh" mesh="step_pdb" rgba="0.95 0.85 0.15 1" class="visual" />
+      </body>
+      <body name="payload_raspberry_pi">
+        <inertial pos="-0.00396063942795272 0.00562910326529305 0.168193340040853" mass="0.05921310351004595" fullinertia="5.723933339304439e-05 4.259889355018553e-05 1.630827559172513e-05 6.550810496080649e-21 6.089308774300558e-19 -1.052808519460216e-20" />
+        <geom name="step_rpi_geom" type="mesh" mesh="step_rpi" rgba="0.2 0.8 0.35 1" class="visual" />
+      </body>
+      <body name="payload_transformer">
+        <inertial pos="-0.0244411015938545 0.00527940764570255 0.10733572019372" mass="0.07401637938755744" fullinertia="2.302526202114597e-05 1.28541778869725e-05 2.99087853041888e-05 -3.571149328952085e-20 2.524638447692575e-19 5.468735924129948e-19" />
+        <geom name="step_transformer_geom" type="mesh" mesh="step_transformer" rgba="0.95 0.55 0.15 1" class="visual" />
+      </body>
+      <body name="payload_servo_power">
+        <inertial pos="0.0186166767457535 0.00541682116406602 0.137463768349882" mass="0.01036229311425804" fullinertia="3.731289045559085e-06 1.140715766994575e-06 2.633749499873916e-06 3.06147400473118e-21 -3.143765279065264e-20 -7.454703513499844e-22" />
+        <geom name="step_servo_power_geom" type="mesh" mesh="step_servo_power" rgba="0.1 0.8 0.85 1" class="visual" />
+      </body>
+      <body name="payload_raspberry_pi_power">
+        <inertial pos="-0.0327718556506106 0.00441868926748546 0.129905602814154" mass="0.01924425864076493" fullinertia="6.790015923749896e-06 5.043599452100478e-06 1.18047489878892e-05 1.977690012958008e-20 2.073317236018957e-21 -3.500461763774189e-22" />
+        <geom name="step_rpi_power_geom" type="mesh" mesh="step_rpi_power" rgba="0.65 0.25 0.9 1" class="visual" />
+      </body>
+      <body name="payload_connection_accessory">
+        <inertial pos="-0.0326243993821584 0.00459674910064101 0.175238513941523" mass="0.02412933968034372" fullinertia="1.769685987722614e-05 6.886915700431443e-06 1.241856682215095e-05 -6.881438853165667e-20 -4.30089928322854e-21 -1.720359713291415e-20" />
+        <geom name="step_connection_accessory_geom" type="mesh" mesh="step_connection_accessory" rgba="0.9 0.35 0.15 1" class="visual" />
+      </body>
+      <body name="payload_battery">
+        <inertial pos="-0.0688863091551182 0.0076693019200562 0.141992318735256" mass="0.3365524770752236" fullinertia="0.0006302948408088646 0.0006302948408088646 8.125370986663485e-05 0 -6.642202825995772e-18 -1.17215343988161e-18" />
+        <geom name="step_battery_geom" type="mesh" mesh="step_battery" rgba="0.2 0.45 0.95 1" class="visual" />
+      </body>
+      <body name="payload_imu_fixing_plate_left">
+        <inertial pos="-0.0382838103647508 0.0497101736424294 0.205262488037373" mass="0.01576548880954973" fullinertia="1.111362185541223e-06 4.711354191258408e-06 3.610502331590033e-06 5.139608671323851e-21 -5.097476874177636e-10 2.055843468529543e-20" />
+        <geom name="step_imu_fixing_left_geom" type="mesh" mesh="step_imu_fixing_left" rgba="0.55 0.58 0.62 1" class="visual" />
+      </body>
+      <body name="payload_imu_fixing_plate_right">
+        <inertial pos="-0.0382793459231801 -0.0382898263575692 0.205265994001449" mass="0.01576548880954973" fullinertia="1.112067044492345e-06 4.712971226155609e-06 3.611414507536186e-06 0 -1.431781891700378e-09 2.055443287396446e-20" />
+        <geom name="step_imu_fixing_right_geom" type="mesh" mesh="step_imu_fixing_right" rgba="0.55 0.58 0.62 1" class="visual" />
+      </body>
+      <body name="payload_imu_wood_plate">
+        <inertial pos="-0.0382791888953987 0.005710173642429 0.218381183920459" mass="0.007993768973856202" fullinertia="5.802875629999725e-06 1.77572111258897e-06 7.573267563272857e-06 6.172098899579255e-21 0 2.468839559831705e-20" />
+        <geom name="step_imu_wood_plate_geom" type="mesh" mesh="step_imu_wood_plate" rgba="0.68 0.46 0.24 1" class="visual" />
+      </body>
+      <geom name="step_imu_geom" type="mesh" mesh="step_imu" rgba="0.1 0.65 1 1" class="visual" />
+      <body name="rearwheel">
+        <joint name="rearwheel_joint" type="hinge" axis="0 1 0" pos="-0.17777919063414 0.0104622524099001 0.0591511904835002" damping="0.001" />
+        <inertial pos="-0.17777919063414 0.0104622524099001 0.0591511904835002" mass="0.09676128457677974" fullinertia="0.0001399227853595923 0.0002585283261502387 0.0001399227826904218 4.251269526670263e-11 -4.12562507040523e-12 3.941044214103635e-12" />
+        <geom name="rear_wheel_link_geom" type="mesh" mesh="step_rear_wheel" class="visual" />
+        <geom name="rear_wheel_collision" class="wheel_collision" size="0.0700000001 0.0700000001 0.009" pos="-0.17777919063414 0.0104622524099001 0.0591511904835002" zaxis="0 1 0" />
+      </body>
+      <body name="steer">
+        <joint name="steering_joint" type="hinge" axis="-0.173647963119954 0 0.984807790842605" pos="0.0790953704714171 0.00571017364243044 0.204261970277831" damping="0.05" armature="0.001" />
+        <inertial pos="0.0886431160204274 0.00571017512921415 0.150112897919652" mass="0.08059613052226505" fullinertia="0.0001062522398796024 9.011407287715333e-05 3.195472830766527e-05 1.066271106403049e-07 1.352105061837213e-05 1.880773433513037e-08" />
+        <geom name="steering_link_geom" type="mesh" mesh="step_steering_link" class="visual" />
+        <geom name="steer_collision" class="body_collision" type="box" size="0.015 0.02 0.04" pos="0.075 0.006 0.18" />
+        <body name="frontwheel">
+          <joint name="frontwheel_joint" type="hinge" axis="-0.00575599953362 0.999982918976388 -0.00101499991776" pos="0.105142370542491 0.00571017235926763 0.0565409702868338" damping="0.001" />
+          <inertial pos="0.105142370542491 0.00571017235926763 0.0565409702868338" mass="0.08625880729677853" fullinertia="0.0001193151849160169 0.000237023380952915 0.0001193114054410424 -6.776182433232692e-07 6.87803811883235e-10 -1.194823655755505e-07" />
+          <geom name="front_wheel_link_geom" type="mesh" mesh="step_front_wheel" class="visual" />
+          <geom name="front_wheel_collision" class="wheel_collision" size="0.0699994448775053 0.0699994448775053 0.00859049084914186" pos="0.105142370542491 0.00571017235926763 0.0565409702868338" zaxis="-0.00575599953362 0.999982918976388 -0.00101499991776" />
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <sensor>
+    <jointpos name="steering_joint_pos_sensor" joint="steering_joint" />
+    <jointvel name="steering_joint_vel_sensor" joint="steering_joint" />
+    <jointvel name="rearwheel_joint_vel_sensor" joint="rearwheel_joint" />
+    <jointvel name="frontwheel_joint_vel_sensor" joint="frontwheel_joint" />
+    <accelerometer name="acc_local" site="imu_site" />
+    <gyro name="gyro_local" site="imu_site" />
+    <framequat name="ori_global" objtype="site" objname="imu_site" />
+    <framepos name="pos_global" objtype="site" objname="imu_site" />
+    <framelinvel name="vel_global" objtype="site" objname="imu_site" />
+  </sensor>
+  <actuator>
+    <motor name="cmd_steering_f" joint="steering_joint" group="2" gear="1" ctrllimited="true" ctrlrange="-7.98 7.98" forcelimited="true" forcerange="-7.98 7.98" />
+    <motor name="cmd_rearwheel_f" joint="rearwheel_joint" group="2" gear="1" ctrllimited="true" ctrlrange="-6 6" forcelimited="true" forcerange="-6 6" />
+  </actuator>
+</mujoco>

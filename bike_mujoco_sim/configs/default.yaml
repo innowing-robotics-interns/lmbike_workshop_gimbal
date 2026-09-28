@@ -1,0 +1,47 @@
+# Default sim / control parameters for bike_mujoco_sim (orange_bike / cascade).
+# Edit this file (or pass --config path/to/other.yaml) instead of hard-coding gains.
+# CLI flags (--duration, --kp-roll, …) override values loaded from YAML.
+# For new_bike use configs/new_bike.yaml (auto-selected with --model new_bike).
+
+# Timing
+duration: 10.0          # simulated seconds (speed-schedule)
+control_dt: 0.02        # outer + inner control period (50 Hz)
+record_dt: 0.02
+
+# Balance law: cascade (notebook rate cascade) or lean_torque (direct PD)
+balance_mode: cascade
+
+# Plant / schedule
+wheel_radius: 0.07
+target_speed: 2.7       # m/s cruise for speed-schedule
+acceleration_time: 1.5  # seconds to ramp to target_speed
+min_scheduling_speed: 1.0
+balance_start_time: 0.1
+
+# Inner loops (steer rate PI, rear speed P) — used in cascade mode
+max_steer_velocity: 10.0
+steer_kp: 0.01
+steer_ki: 0.01
+steer_integral_limit: 10.0
+rear_kp: 0.1
+rear_torque_limit: 2.0
+steer_rate_damping: 0.0
+
+# IMU alignment / bias (degrees / deg/s)
+sensor_to_bike_rpy_deg: [0.0, 0.0, 0.0]
+gyro_bias_sensor_dps: [0.0, 0.0, 0.0]
+
+# Outer roll–steer PID
+pid_kp_roll: 8.0
+pid_ki_roll: 1.0
+pid_kd_roll: 1.5
+pid_kp_steer: 2.0
+pid_integral_limit: 5.0
+
+# Remote mode (arrow keys)
+speed_goal_step: 0.15
+speed_goal_min: -1.0
+speed_goal_max: 3.5
+steer_ref_step: 0.05
+steer_ref_limit: 0.7
+low_speed_upright: 0.1  # |speed_goal| below this → upright hold

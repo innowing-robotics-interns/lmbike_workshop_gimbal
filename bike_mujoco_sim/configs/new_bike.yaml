@@ -1,0 +1,52 @@
+# Tuned for the 2.2 kg new_bike. Same structure as the orange / LQR loop:
+# outer PID commands steer rate, inner PI makes a small torque.
+# SteadyWin GIM4310-10 GDZ34 stall is ±7.98 N·m. Speed cap 23.9 rad/s.
+#
+#   ω_des = kp_roll*(roll_ref-roll) + ki_roll*∫e_roll + kd_roll*(-roll_rate)
+#           + kp_steer*(steer_ref-steer)
+#   τ = steer_kp*(ω_des-ω) + steer_ki*∫(ω_des-ω)
+
+balance_mode: cascade
+
+# Timing
+duration: 10.0
+control_dt: 0.02
+record_dt: 0.02
+balance_start_time: 0.0
+
+# Plant / schedule
+wheel_radius: 0.07
+target_speed: 2.2
+acceleration_time: 1.76
+min_scheduling_speed: 1.0
+
+# Inner steer-rate PI. Keep steer_kp small so torque stays off the stall stop.
+max_steer_velocity: 12.0
+steer_kp: 0.03440724167520511
+steer_ki: 0.021304688728578564
+steer_integral_limit: 8.0
+rear_kp: 0.25
+rear_torque_limit: 2.5
+steer_torque_limit: 7.98
+steer_velocity_limit: 23.9
+
+steer_joint_damping: 0.01890537736008028
+
+sensor_to_bike_rpy_deg: [0.0, 0.0, 0.0]
+gyro_bias_sensor_dps: [0.0, 0.0, 0.0]
+
+# Outer roll–steer PID. Output is rad/s, not N·m.
+pid_kp_roll: 7.535559389256096
+pid_ki_roll: 1.2614702013440495
+pid_kd_roll: 11.260517241323017
+pid_kp_steer: 1.1164231977942145
+pid_integral_limit: 5.0
+steer_rate_damping: 0.0
+
+# Remote mode
+speed_goal_step: 0.15
+speed_goal_min: -1.0
+speed_goal_max: 3.5
+steer_ref_step: 0.05
+steer_ref_limit: 0.7
+low_speed_upright: 0.1
