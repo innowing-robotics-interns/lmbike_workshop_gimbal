@@ -57,6 +57,13 @@ class Config:
     speed_goal_max: float = 3.5
     steer_ref_step: float = 0.05
     steer_ref_limit: float = 0.7
+    # Remote heading: left/right add this many radians.
+    # heading_kp is steer-rate (rad/s) per radian of heading error.
+    heading_step: float = 0.262
+    heading_kp: float = 1.5
+    heading_ki: float = 0.3
+    # Full left/right stick deflection, as a steer-rate command (rad/s).
+    heading_stick_rate: float = 1.5
     low_speed_upright: float = 0.1
 
 

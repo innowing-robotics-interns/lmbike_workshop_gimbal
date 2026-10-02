@@ -1,0 +1,11 @@
+﻿# CubeIDE build output. Regenerated on every build, and it contains absolute
+# paths from whichever machine produced it - never copy it to another computer.
+Release/
+Debug/
+
+# Eclipse workspace metadata that is recreated automatically
+.metadata/
+
+# OS noise
+.DS_Store
+Thumbs.db

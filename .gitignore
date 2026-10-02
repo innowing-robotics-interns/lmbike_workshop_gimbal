@@ -6,4 +6,8 @@ __pycache__/
 .mypy_cache/
 runs/
 *.png
+*.zip
 .DS_Store
+
+# Local course / workshop trees (keep on disk, do not track)
+resources/

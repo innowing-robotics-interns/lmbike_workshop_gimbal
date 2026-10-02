@@ -44,4 +44,8 @@ speed_goal_min: -1.0
 speed_goal_max: 3.5
 steer_ref_step: 0.05
 steer_ref_limit: 0.7
+heading_step: 0.262          # rad per left/right press (~15°)
+heading_kp: 1.5              # steer rad/s per heading rad, used to hold heading
+heading_ki: 0.3
+heading_stick_rate: 1.5      # steer rad/s at full left/right stick
 low_speed_upright: 0.1  # |speed_goal| below this → upright hold

@@ -3,6 +3,13 @@
 Notebook-07 dual-loop balance (50 Hz outer + steer PI + rear P) with a
 **roll–steer PID** outer loop instead of LQR / pole placement.
 
+Student lessons (each file stands alone): follow [HOW_TO_RUN_NOTEBOOK.md](HOW_TO_RUN_NOTEBOOK.md), then open any of
+`tutorials/01_environment_and_the_fall.ipynb`,
+`tutorials/02_pid_and_the_struggle.ipynb`,
+`tutorials/03_tuning_and_balance.ipynb`,
+`tutorials/04_teleop_and_disturbance.ipynb`,
+`tutorials/05_escaping_the_sandbox.ipynb`.
+
 ## Setup
 
 ```bash

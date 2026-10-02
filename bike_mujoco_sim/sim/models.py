@@ -47,7 +47,7 @@ def resolve_model_path(spec: str | Path | None = None) -> Path:
             else:
                 path = path.resolve()
     if not path.is_file():
-        known = ", ".join(sorted({"orange_bike", "new_bike"}))
+        known = ", ".join(sorted({"orange_bike", "new_bike", "new_bike_3kg"}))
         raise FileNotFoundError(f"Unknown model {spec!r}. Use {known} or a path to an .xml file.")
     return path
 

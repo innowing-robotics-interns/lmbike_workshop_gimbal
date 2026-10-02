@@ -54,23 +54,49 @@ class RollSteerPID:
         return float(max(-self.max_steer_velocity, min(self.max_steer_velocity, cmd)))
 
 
+def heading_error(heading_goal: float, yaw: float) -> float:
+    """Wrapped yaw error, radians. Positive when the goal is to the left of the nose."""
+    return wrap_angle(float(heading_goal) - float(yaw))
+
+
+def steer_rate_from_heading(
+    *,
+    heading_goal: float,
+    yaw: float,
+    kp: float,
+    limit: float,
+    ki: float = 0.0,
+    integral: float = 0.0,
+) -> float:
+    """Steer-rate bias that reduces heading error.
+
+    On this MJCF a positive steer rate yaws the bike toward -yaw, so the
+    command is opposite the heading error. ``kp`` is in 1/s, ``ki`` in 1/s².
+    ``integral`` is the accumulated heading error in radian-seconds.
+    """
+    error = heading_error(heading_goal, yaw)
+    command = -float(kp) * error - float(ki) * float(integral)
+    return max(-float(limit), min(float(limit), command))
+
+
 def apply_speed_refs(
     *,
     mode: str,
     time_s: float,
-    speed_goal: float,
+    speed_goal: float | None,
     steer_ref: float,
     cfg,
 ) -> tuple[float, float, float]:
     """Return (speed_ref, roll_ref, steer_ref) for the current mode."""
-    if mode == "speed-schedule":
+    if mode == "speed-schedule" or speed_goal is None:
+        # No remote speed command: same ramp the balance gains were tuned on.
         speed_ref = min(
             time_s / max(cfg.acceleration_time, 1e-9) * cfg.target_speed,
             cfg.target_speed,
         )
         return float(speed_ref), 0.0, 0.0
 
-    # remote
+    # remote, explicit speed goal
     if abs(speed_goal) < cfg.low_speed_upright:
         return 0.0, 0.0, 0.0
     steer = max(-cfg.steer_ref_limit, min(cfg.steer_ref_limit, steer_ref))

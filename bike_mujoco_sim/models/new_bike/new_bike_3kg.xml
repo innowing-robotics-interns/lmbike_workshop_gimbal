@@ -93,7 +93,8 @@
         <geom name="rear_wheel_collision" class="wheel_collision" size="0.0700000001 0.0700000001 0.009" pos="-0.17777919063414 0.0104622524099001 0.0591511904835002" zaxis="0 1 0" />
       </body>
       <body name="steer">
-        <joint name="steering_joint" type="hinge" axis="-0.173647963119954 0 0.984807790842605" pos="0.0790953704714171 0.00571017364243044 0.204261970277831" range="-0.436332 0.436332" limited="true" damping="0.05" armature="0.001" />
+        <!-- No angle stop: the cascade uses about 40° while speed is coming up, and the ±25° stop cuts that off. -->
+        <joint name="steering_joint" type="hinge" axis="-0.173647963119954 0 0.984807790842605" pos="0.0790953704714171 0.00571017364243044 0.204261970277831" damping="0.05" armature="0.001" />
         <inertial pos="0.0886431160204274 0.00571017512921415 0.150112897919652" mass="0.108889587938712" fullinertia="0.000143552333630445 0.000121748825898801 4.317250934465059e-05 1.44058803635874e-07 1.826764660775219e-05 2.54102328305619e-08" />
         <geom name="steering_link_geom" type="mesh" mesh="step_steering_link" class="visual" />
         <geom name="steer_collision" class="body_collision" type="box" size="0.015 0.02 0.04" pos="0.075 0.006 0.18" />

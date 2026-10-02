@@ -45,4 +45,4 @@ def bicycle_state_from_imu(
     roll_rate = p + np.sin(roll) * np.tan(pitch) * q + np.cos(roll) * np.tan(pitch) * r
     steer_used = wrap_angle(steer) if wrap_steer else float(steer)
     state = np.array([[steer_used], [roll], [roll_rate]], dtype=float)
-    return state, float(roll), float(roll_rate)
+    return state, float(roll), float(roll_rate), float(yaw)

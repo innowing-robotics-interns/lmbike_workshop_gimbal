@@ -10,25 +10,38 @@ import numpy as np
 
 from .config import Config
 from .models import load_model, steering_is_unlimited
-from .pid_controller import RollSteerPID, apply_speed_refs
+from .joystick import STICK_DEADZONE, speed_goal_from_stick
+from .pid_controller import RollSteerPID, apply_speed_refs, heading_error, steer_rate_from_heading
 from .sensors import bicycle_state_from_imu, sensor_to_bike_from_config, wrap_angle
 
 
 @dataclass
 class RideGoals:
-    speed_goal: float = 0.0
+    # None: stick centered, cruise at target_speed. A number is an explicit stick speed.
+    speed_goal: float | None = None
     steer_ref: float = 0.0
+    # Spring-centered stick. +x turns left, +y is faster than cruise. Zero when released.
+    stick_x: float = 0.0
+    stick_y: float = 0.0
+    stopped: bool = False
+    heading_offset: float = 0.0
+    captured_heading: float | None = None
+    heading_latched: bool = False
     reset_requested: bool = False
 
     def stop(self) -> None:
+        self.stopped = True
         self.speed_goal = 0.0
         self.steer_ref = 0.0
+        self.stick_x = 0.0
+        self.stick_y = 0.0
 
 
 @dataclass
 class ControlState:
     steer_integral: float = 0.0
     roll_integral: float = 0.0
+    heading_integral: float = 0.0
     next_control: float = 0.0
     next_record: float = 0.0
     pid: RollSteerPID | None = None
@@ -141,11 +154,20 @@ def reset_sim(sim: SimHandles) -> None:
     mujoco.mj_forward(sim.model, sim.data)
     sim.ctrl.steer_integral = 0.0
     sim.ctrl.roll_integral = 0.0
+    sim.ctrl.heading_integral = 0.0
     sim.ctrl.next_control = 0.0
     sim.ctrl.next_record = 0.0
     if sim.ctrl.pid is not None:
         sim.ctrl.pid.reset()
     sim.goals.reset_requested = False
+    sim.goals.speed_goal = None
+    sim.goals.steer_ref = 0.0
+    sim.goals.stick_x = 0.0
+    sim.goals.stick_y = 0.0
+    sim.goals.stopped = False
+    sim.goals.heading_offset = 0.0
+    sim.goals.captured_heading = None
+    sim.goals.heading_latched = False
     for key in sim.history:
         sim.history[key].clear()
 
@@ -159,7 +181,7 @@ def control_step(sim: SimHandles) -> None:
     steer = float(data.sensor("steering_joint_pos_sensor").data[0])
     steer_rate = float(data.sensor("steering_joint_vel_sensor").data[0])
     rear_rate = float(data.sensor("rearwheel_joint_vel_sensor").data[0])
-    _, roll, roll_rate = bicycle_state_from_imu(
+    _, roll, roll_rate, yaw = bicycle_state_from_imu(
         steer,
         data.sensor("ori_global").data,
         data.sensor("gyro_local").data,
@@ -170,6 +192,14 @@ def control_step(sim: SimHandles) -> None:
     speed = cfg.wheel_radius * rear_rate
     steer_wrapped = wrap_angle(steer) if sim.wrap_steer else steer
 
+    if sim.mode == "remote":
+        if sim.goals.stopped and abs(sim.goals.stick_y) >= STICK_DEADZONE:
+            sim.goals.stopped = False
+        if sim.goals.stopped:
+            sim.goals.speed_goal = 0.0
+        else:
+            sim.goals.speed_goal = speed_goal_from_stick(sim.goals.stick_y, cfg)
+
     speed_ref, roll_ref, steer_ref = apply_speed_refs(
         mode=sim.mode,
         time_s=float(data.time),
@@ -177,6 +207,37 @@ def control_step(sim: SimHandles) -> None:
         steer_ref=sim.goals.steer_ref,
         cfg=cfg,
     )
+    heading_rate = 0.0
+    if sim.mode == "remote":
+        steer_ref = 0.0
+        if abs(sim.goals.stick_x) >= STICK_DEADZONE:
+            # Held stick: turn rate follows the deflection and springs back to zero.
+            sim.goals.heading_latched = False
+            sim.ctrl.heading_integral = 0.0
+            heading_rate = float(
+                np.clip(
+                    -sim.goals.stick_x * cfg.heading_stick_rate,
+                    -cfg.max_steer_velocity,
+                    cfg.max_steer_velocity,
+                )
+            )
+        else:
+            if not sim.goals.heading_latched or sim.goals.captured_heading is None:
+                sim.goals.captured_heading = float(yaw)
+                sim.goals.heading_latched = True
+                sim.ctrl.heading_integral = 0.0
+            error = heading_error(float(sim.goals.captured_heading), float(yaw))
+            sim.ctrl.heading_integral = float(
+                np.clip(sim.ctrl.heading_integral + error * cfg.control_dt, -1.5, 1.5)
+            )
+            heading_rate = steer_rate_from_heading(
+                heading_goal=float(sim.goals.captured_heading),
+                yaw=float(yaw),
+                kp=cfg.heading_kp,
+                ki=cfg.heading_ki,
+                integral=sim.ctrl.heading_integral,
+                limit=cfg.max_steer_velocity,
+            )
 
     if float(data.time) < cfg.balance_start_time:
         steer_rate_ref = 0.0
@@ -237,6 +298,13 @@ def control_step(sim: SimHandles) -> None:
             dt=cfg.control_dt,
             roll_ref=roll_ref,
             steer_ref=steer_ref,
+        )
+        steer_rate_ref = float(
+            np.clip(
+                steer_rate_ref + heading_rate,
+                -cfg.max_steer_velocity,
+                cfg.max_steer_velocity,
+            )
         )
         steer_error = steer_rate_ref - steer_rate
         sim.ctrl.steer_integral = float(
