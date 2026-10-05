@@ -9,3 +9,6 @@ Debug/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Presenter slide notes. Kept locally, not part of the student tree.
+CURRICULUM.md

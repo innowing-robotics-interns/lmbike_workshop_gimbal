@@ -1,61 +1,61 @@
-# Bike Project Local
+# Bike workshop
 
-Local MuJoCo workshop for a planar bicycle that has to balance itself.
+This repository is the workshop package. It has two parts: a MuJoCo bicycle simulation, and the firmware for a phone gimbal. Clone it, then open the folder you are working on.
 
-This repository is an Origin git repo, not GitHub. Commands such as
-`git fetch origin pull/3/head:mujoco-workshop` look for a GitHub pull-request
-ref that does not exist here, so they fail with `couldn't find remote ref`.
-The workshop lives on `main` under `workshop/mujoco_balance`.
-
-## Run the balancer
-
-Python 3.12+ with `python3-venv` (Debian/Ubuntu: `sudo apt install python3.12-venv`).
+The clone command is the same on Windows, macOS, and Linux. Install Git first, using the section for your system. The download lands in a new folder named `lmbike_workshop_gimbal`.
 
 ```bash
-cd workshop/mujoco_balance
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python run_balance.py
+git clone https://github.com/innowing-robotics-interns/lmbike_workshop_gimbal.git
+cd lmbike_workshop_gimbal
 ```
 
-From the repo root you can also run:
+If this machine already has a GitHub SSH key, use this address instead:
 
 ```bash
-./run_balance.sh
-./run_balance.sh --model new_bike
+git clone git@github.com:innowing-robotics-interns/lmbike_workshop_gimbal.git
 ```
 
-That opens MuJoCo's own Simulate window (the same native app you'd get on a
-laptop). Close the window to stop. Click the window (or install `xdotool` on
-Ubuntu) so **arrow keys** work (WASD is used by MuJoCo UI). `--model new_bike`
-loads the mesh bike for free-drive steering/throttle (no cascade balancer).
-Add `--debug` to print realtime timing diagnostics.
+## Windows
 
-Headless smoke test (flat ground):
+1. Install Git for Windows from [https://git-scm.com/download/win](https://git-scm.com/download/win). The installer can keep the default options.
+2. Close any terminal that was already open, then open PowerShell or Git Bash so `git` is on the path.
+3. Move to the folder where you want the project (for example `cd $HOME\Documents`), then run the clone commands above.
 
-```bash
-python run_balance.py --no-viewer --flat --duration 10
-```
+## macOS
 
-The default run keeps the road mostly flat and scatters a few small hills
-(about 8–32 cm). Each hill is a brown mound with a yellow pin. The overlay
-lists the nearest hill. `--flat` turns them off.
+1. Open Terminal.
+2. Run `git --version`. If Git is missing, macOS offers the Xcode command-line tools. Install those, then run `git --version` again.
+3. `cd` to the folder where you want the project, then run the clone commands above.
 
-`python` is provided by the virtualenv. Outside it, use `python3`.
+## Linux
 
-## What it does
+1. Install Git from your package manager.
 
-The MJCF model in `models/bike.xml` is a planar bicycle on a height-field
-road. By default `environment.py` scatters small hills and bumps on otherwise
-flat ground, and randomizes friction and rider mass. `--flat` turns that off.
+   Debian or Ubuntu:
 
-The cascade controller keeps it upright; keyboard arrows set the speed.
+   ```bash
+   sudo apt update
+   sudo apt install git
+   ```
 
-## Tests
+   Fedora:
 
-```bash
-cd workshop/mujoco_balance
-source .venv/bin/activate
-pytest -q
-```
+   ```bash
+   sudo dnf install git
+   ```
+
+2. `cd` to the folder where you want the project, then run the clone commands above.
+
+## What the two folders contain
+
+### `bike_mujoco_sim`
+
+A MuJoCo simulation of a bicycle that has to stay upright. The lessons are Jupyter notebooks in `tutorials/`, from setup (`00_setup_and_install.ipynb`) through PID, tuning, and driving the bike by hand. `sim/` is the Python controller and the simulation loop. `models/` and `configs/` are the bicycle models and the gain settings those lessons load.
+
+After the clone, start with [bike_mujoco_sim/HOW_TO_RUN_NOTEBOOK.md](bike_mujoco_sim/HOW_TO_RUN_NOTEBOOK.md) and `bike_mujoco_sim/tutorials/00_setup_and_install.ipynb`.
+
+### `gimbal`
+
+Firmware for the phone gimbal, in `gimbal/servo_test`. It is an STM32CubeIDE project for an STM32F103. An IMU reports roll and pitch. Two servos on a PCA9685 tilt the phone back toward level. The control law is a PID in `gimbal/servo_test/Core/Src/gimbal_control.c`. That is the file to edit. The drivers stay behind the hardware API.
+
+The function reference is [gimbal/servo_test/CONTROL_API.md](gimbal/servo_test/CONTROL_API.md). Open `gimbal/servo_test` in STM32CubeIDE to build and flash.
