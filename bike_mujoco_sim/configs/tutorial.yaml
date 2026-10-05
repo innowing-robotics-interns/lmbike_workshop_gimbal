@@ -1,11 +1,8 @@
-# Student control panel for the tutorial notebooks.
-# Starts as a "struggle then fall" cascade on new_bike.
-# Outer PID commands steer rate; inner PI makes a small torque.
-# Edit pid_kp_roll / pid_ki_roll / pid_kd_roll / pid_kp_steer to tune.
-#
-#   ω_des = kp_roll*(roll_ref-roll) + ki_roll*∫e_roll + kd_roll*(-roll_rate)
-#           + kp_steer*(steer_ref-steer)
-#   τ = steer_kp*(ω_des-ω) + steer_ki*∫(ω_des-ω)
+# Settings for the lessons. You edit the pid_ numbers.
+# Starts weak on purpose: the bicycle tries to stay up, then falls.
+# The balance rule decides how fast the handlebars should turn.
+# A smaller rule inside the motor turns that speed into a twist.
+# Edit pid_kp_roll, pid_ki_roll, pid_kd_roll, and pid_kp_steer.
 
 balance_mode: cascade
 
@@ -32,8 +29,8 @@ steer_joint_damping: 0.01890537736008028
 sensor_to_bike_rpy_deg: [0.0, 0.0, 0.0]
 gyro_bias_sensor_dps: [0.0, 0.0, 0.0]
 
-# Weak outer gains: the bike fights for under a second, then falls.
-# Raise pid_kd_roll (and keep pid_kp_roll near 7.5) to damp the fall.
+# Weak on purpose: the bicycle struggles for less than a second, then falls.
+# To catch the fall, raise pid_kd_roll and keep pid_kp_roll near 7.5.
 pid_kp_roll: 5.0
 pid_ki_roll: 0.0
 pid_kd_roll: 6.0
