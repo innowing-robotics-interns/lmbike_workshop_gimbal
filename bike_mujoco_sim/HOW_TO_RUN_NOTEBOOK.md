@@ -4,22 +4,25 @@ Start Jupyter from the `bike_mujoco_sim` folder, the one that contains `run_sim.
 
 First-time package install is in `tutorials/00_setup_and_install.ipynb`. This page is only how to start the server after that environment exists.
 
-## Linux or macOS
+## Linux
 
-```bash
-cd path/to/bike_mujoco_sim
-source .venv/bin/activate
-python -m jupyter lab
-```
-
-`python3 -m jupyter lab` without activating `.venv` uses the system Python. That Python does not have JupyterLab, and the command ends with `Jupyter command jupyter-lab not found`. Use the environment above, or call it directly:
+From `bike_mujoco_sim`, this is the command that starts the server:
 
 ```bash
 cd path/to/bike_mujoco_sim
 .venv/bin/python -m jupyter lab
 ```
 
-On macOS, a cell that opens the MuJoCo window needs:
+`python3 -m jupyter lab` uses the system Python. That Python does not have JupyterLab, and it stops with `Jupyter command jupyter-lab not found`.
+
+## macOS
+
+```bash
+cd path/to/bike_mujoco_sim
+.venv/bin/python -m jupyter lab
+```
+
+A cell that opens the MuJoCo window needs:
 
 ```bash
 mjpython -m jupyter lab
@@ -41,4 +44,4 @@ python -m jupyter lab
 4. In the kernel menu, pick **Bike MuJoCo sim**, or the Python inside `.venv`.
 5. Stop the server with Ctrl+C in that same terminal.
 
-`python -m jupyter notebook` starts the older notebook interface from the same folder. The lessons are the same.
+`.venv/bin/python -m jupyter notebook` starts the older notebook interface from the same folder. The lessons are the same.

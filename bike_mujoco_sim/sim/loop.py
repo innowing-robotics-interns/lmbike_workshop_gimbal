@@ -172,6 +172,15 @@ def reset_sim(sim: SimHandles) -> None:
         sim.history[key].clear()
 
 
+def shove_bicycle_sideways(sim: SimHandles, speed_m_s: float = 0.8) -> None:
+    """Add a sideways velocity to the frame. The balancing loop then has to catch the lean."""
+    body_id = mujoco.mj_name2id(sim.model, mujoco.mjtObj.mjOBJ_BODY, "base_link")
+    if body_id < 0:
+        return
+    lateral = np.array(sim.data.xmat[body_id], dtype=float).reshape(3, 3)[:, 1]
+    sim.data.qvel[0:3] = np.asarray(sim.data.qvel[0:3], dtype=float) + float(speed_m_s) * lateral
+
+
 def control_step(sim: SimHandles) -> None:
     """Run one outer+inner control update and write data.ctrl."""
     cfg = sim.cfg

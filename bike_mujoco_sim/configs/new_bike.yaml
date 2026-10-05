@@ -22,8 +22,8 @@ min_scheduling_speed: 1.0
 
 # Inner steer-rate PI. Keep steer_kp small so torque stays off the stall stop.
 max_steer_velocity: 12.0
-steer_kp: 0.03440724167520511
-steer_ki: 0.021304688728578564
+steer_kp: 0.0344
+steer_ki: 0.0213
 steer_integral_limit: 8.0
 rear_kp: 0.25
 rear_torque_limit: 2.5
@@ -36,10 +36,10 @@ sensor_to_bike_rpy_deg: [0.0, 0.0, 0.0]
 gyro_bias_sensor_dps: [0.0, 0.0, 0.0]
 
 # Outer roll–steer PID. Output is rad/s, not N·m.
-pid_kp_roll: 7.535559389256096
-pid_ki_roll: 1.2614702013440495
-pid_kd_roll: 11.260517241323017
-pid_kp_steer: 1.1164231977942145
+pid_kp_roll: 7.5356
+pid_ki_roll: 1.2615
+pid_kd_roll: 11.2605
+pid_kp_steer: 1.1164
 pid_integral_limit: 5.0
 steer_rate_damping: 0.0
 

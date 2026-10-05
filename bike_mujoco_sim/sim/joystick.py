@@ -19,6 +19,11 @@ _JS_AXIS = 0x02
 _JS_INIT = 0x80
 
 
+# Arrow keys grow toward full deflection while held, then drop back quickly.
+_KEY_RISE_PER_S = 2.4
+_KEY_FALL_PER_S = 12.0
+
+
 class StickInput:
     """Combine mouse, keyboard, and an optional /dev/input/js device."""
 
@@ -27,8 +32,11 @@ class StickInput:
         self._mouse = (0.0, 0.0)
         self._mouse_down = False
         self._keys: set[str] = set()
+        self._key_axes = (0.0, 0.0)
         self._hardware = (0.0, 0.0)
         self._reset_pending = False
+        self._push_pending = False
+        self._push_speed = 0.8
 
     def set_mouse(self, x: float, y: float, down: bool) -> None:
         with self._lock:
@@ -52,7 +60,32 @@ class StickInput:
             self._mouse = (0.0, 0.0)
             self._mouse_down = False
             self._keys.clear()
+            self._key_axes = (0.0, 0.0)
             self._hardware = (0.0, 0.0)
+
+    def request_push(self, speed_m_s: float = 0.8) -> None:
+        with self._lock:
+            self._push_pending = True
+            self._push_speed = float(speed_m_s)
+
+    def consume_push(self) -> float | None:
+        with self._lock:
+            if not self._push_pending:
+                return None
+            self._push_pending = False
+            return self._push_speed
+
+    def advance_keys(self, dt: float) -> None:
+        """Grow the arrow-key stick while a key is held, and drop it after release."""
+        dt = max(0.0, min(float(dt), 0.05))
+        with self._lock:
+            target_x = (1.0 if "left" in self._keys else 0.0) - (1.0 if "right" in self._keys else 0.0)
+            target_y = (1.0 if "up" in self._keys else 0.0) - (1.0 if "down" in self._keys else 0.0)
+            x, y = self._key_axes
+            self._key_axes = (
+                _slew_axis(x, target_x, dt),
+                _slew_axis(y, target_y, dt),
+            )
 
     def consume_reset(self) -> bool:
         with self._lock:
@@ -69,9 +102,8 @@ class StickInput:
         with self._lock:
             if self._mouse_down:
                 return self._mouse
-            x = (1.0 if "left" in self._keys else 0.0) - (1.0 if "right" in self._keys else 0.0)
-            y = (1.0 if "up" in self._keys else 0.0) - (1.0 if "down" in self._keys else 0.0)
-            if x or y:
+            x, y = self._key_axes
+            if abs(x) > 1e-3 or abs(y) > 1e-3:
                 return (_clip(x), _clip(y))
             return self._hardware
 
@@ -192,7 +224,7 @@ class JoystickWindow:
         root.title("Bike joystick")
         root.attributes("-topmost", True)
         root.resizable(False, False)
-        root.geometry("280x400+60+80")
+        root.geometry("280x460+60+80")
         root.configure(bg="#1c1f24")
 
         radius = 92
@@ -208,7 +240,7 @@ class JoystickWindow:
         status.pack()
         tk.Label(
             root,
-            text="Drag the stick. Arrows work while\nthis window is focused. Release to center.",
+            text="Hold an arrow key and the stick grows.\nLet go and it returns to center quickly.",
             fg="#8aa0b8",
             bg="#1c1f24",
             font=("Sans", 9),
@@ -265,6 +297,42 @@ class JoystickWindow:
             status.configure(text="")
             self._fallen = False
             reset_btn.configure(bg="#3a4553", activebackground="#4a5666")
+
+        def do_push() -> None:
+            try:
+                speed = float(speed_var.get())
+            except (TypeError, ValueError):
+                speed = 0.8
+            self.stick.request_push(speed)
+
+        push_row = tk.Frame(root, bg="#1c1f24")
+        push_row.pack(pady=(8, 0))
+        tk.Label(push_row, text="Strength (m/s)", fg="#d5dde6", bg="#1c1f24", font=("Sans", 10)).pack(side="left", padx=(0, 6))
+        speed_var = tk.StringVar(value="0.8")
+        tk.Spinbox(
+            push_row,
+            from_=0.1,
+            to=2.0,
+            increment=0.1,
+            textvariable=speed_var,
+            width=5,
+            font=("Sans", 11),
+            format="%.1f",
+        ).pack(side="left")
+        push_btn = tk.Button(
+            root,
+            text="Push sideways",
+            command=do_push,
+            bg="#3a4553",
+            fg="#f0f4f8",
+            activebackground="#4a5666",
+            activeforeground="#ffffff",
+            relief="flat",
+            padx=18,
+            pady=8,
+            font=("Sans", 11, "bold"),
+        )
+        push_btn.pack(pady=(8, 0))
 
         reset_btn = tk.Button(
             root,
@@ -342,3 +410,11 @@ class JoystickWindow:
 
 def _clip(value: float) -> float:
     return max(-1.0, min(1.0, float(value)))
+
+
+def _slew_axis(current: float, target: float, dt: float) -> float:
+    rate = _KEY_FALL_PER_S if target == 0.0 else _KEY_RISE_PER_S
+    step = rate * dt
+    if current < target:
+        return min(target, current + step)
+    return max(target, current - step)

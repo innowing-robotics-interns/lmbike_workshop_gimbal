@@ -11,7 +11,7 @@ import mujoco
 
 from .config import Config
 from .joystick import HardwareJoystick, JoystickWindow, StickInput
-from .loop import RideGoals, SimHandles, reset_sim, step_physics
+from .loop import RideGoals, SimHandles, reset_sim, shove_bicycle_sideways, step_physics
 
 KEY_SPACE, KEY_0 = 32, 48
 KEY_RIGHT, KEY_LEFT, KEY_DOWN, KEY_UP = 262, 263, 264, 265
@@ -22,7 +22,7 @@ _ARROW_KEYS = {
     KEY_RIGHT: "right",
 }
 # MuJoCo only reports key-down. A key counts as released when repeats stop.
-_KEY_HOLD_S = 0.45
+_KEY_HOLD_S = 0.18
 FRAME_PERIOD = 1.0 / 60.0
 MAX_SIM_PER_FRAME = 0.05
 
@@ -84,11 +84,12 @@ def run_viewer(sim: SimHandles) -> None:
         apply_key(sim.goals, key, cfg)
 
     handle = mj_viewer.launch_passive(sim.model, sim.data, key_callback=key_callback)
-    print("Remote stick (floating window, or hold arrows — they spring back):")
+    print("Remote stick (floating window, or hold arrows — they grow, then spring back):")
     print("  Up/Down     speed around cruise")
     print("  Left/Right  turn rate")
     print("  0           stop")
     print("  Space / Reset button  reset upright")
+    print("  Push sideways button  a shove from the side; Strength sets how hard")
     print(
         f"Stick centered: cruise at {cfg.target_speed:.2f} m/s and hold heading.",
         flush=True,
@@ -99,10 +100,13 @@ def run_viewer(sim: SimHandles) -> None:
     max_steps = max(1, int(MAX_SIM_PER_FRAME / max(dt, 1e-6)))
     wall0 = time.perf_counter()
     sim0 = float(sim.data.time)
+    last_input = time.perf_counter()
 
     try:
         while handle.is_running():
             now_keys = time.perf_counter()
+            stick.advance_keys(now_keys - last_input)
+            last_input = now_keys
             for key, name in _ARROW_KEYS.items():
                 if key in key_until and key_until[key] <= now_keys:
                     stick.set_key(name, False)
@@ -114,6 +118,9 @@ def run_viewer(sim: SimHandles) -> None:
             if stick.consume_reset():
                 sim.goals.reset_requested = True
             sim.goals.stick_x, sim.goals.stick_y = stick.axes()
+            push_speed = stick.consume_push()
+            if push_speed is not None:
+                shove_bicycle_sideways(sim, push_speed)
 
             if sim.goals.reset_requested:
                 reset_sim(sim)

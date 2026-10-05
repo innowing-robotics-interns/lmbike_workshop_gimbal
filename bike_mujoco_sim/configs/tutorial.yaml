@@ -1,7 +1,7 @@
 # Settings for the lessons. You edit the pid_ numbers.
 # Starts weak on purpose: the bicycle tries to stay up, then falls.
-# The balance rule decides how fast the handlebars should turn.
-# A smaller rule inside the motor turns that speed into a twist.
+# The balancing loop decides how fast the handlebars should turn.
+# A smaller control loop inside the motor turns that speed into a twist.
 # Edit pid_kp_roll, pid_ki_roll, pid_kd_roll, and pid_kp_steer.
 
 balance_mode: cascade
@@ -17,8 +17,8 @@ acceleration_time: 1.76
 min_scheduling_speed: 1.0
 
 max_steer_velocity: 12.0
-steer_kp: 0.03440724167520511
-steer_ki: 0.021304688728578564
+steer_kp: 0.0344
+steer_ki: 0.0213
 steer_integral_limit: 8.0
 rear_kp: 0.25
 rear_torque_limit: 2.5
@@ -34,7 +34,7 @@ gyro_bias_sensor_dps: [0.0, 0.0, 0.0]
 pid_kp_roll: 5.0
 pid_ki_roll: 0.0
 pid_kd_roll: 6.0
-pid_kp_steer: 1.1164231977942145
+pid_kp_steer: 1.1164
 pid_integral_limit: 5.0
 steer_rate_damping: 0.0
 
