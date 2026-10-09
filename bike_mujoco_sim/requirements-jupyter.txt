@@ -1,0 +1,6 @@
+# Local notebook server only. Do not install this file on Google Colab.
+# Colab already provides Jupyter, and replacing it makes the notebook fail
+# Colab's version check.
+jupyter>=1.1
+ipykernel>=6.29
+nbclient>=0.10

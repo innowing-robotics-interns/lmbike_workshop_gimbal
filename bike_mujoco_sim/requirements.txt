@@ -1,11 +1,13 @@
 # Use Python 3.10 or 3.11 (not 3.14). See tutorials/00_setup_and_install.ipynb
 # Package for `import yaml` is PyYAML.
+#
+# Simulation packages only. Jupyter is listed in requirements-jupyter.txt for a
+# local notebook server. Do not add jupyter, notebook, or ipykernel here:
+# installing them on Google Colab replaces Colab's Jupyter, and Colab then
+# rejects the notebook because the versions differ.
 mujoco>=3.2.0
 numpy>=1.26
 scipy>=1.11
 matplotlib>=3.8
 PyYAML>=6.0
 pytest>=8.0
-jupyter>=1.1
-ipykernel>=6.29
-nbclient>=0.10
