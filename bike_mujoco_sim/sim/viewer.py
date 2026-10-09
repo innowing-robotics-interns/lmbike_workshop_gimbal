@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import atexit
 import math
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 import time
 
 import mujoco
@@ -67,58 +71,119 @@ def _ensure_gui_display() -> None:
         )
 
 
+_RIDE_PREFIX = "bike_mujoco_ride_"
+
+
+def _cleanup_ride_videos() -> None:
+    """Delete ride clips. Called on kernel exit, and once at import for leftovers."""
+    folder = tempfile.gettempdir()
+    try:
+        names = os.listdir(folder)
+    except OSError:
+        return
+    for name in names:
+        if not name.startswith(_RIDE_PREFIX):
+            continue
+        try:
+            os.remove(os.path.join(folder, name))
+        except OSError:
+            pass
+
+
+atexit.register(_cleanup_ride_videos)
+_cleanup_ride_videos()
+
+
 def _play_inline(sim: SimHandles) -> None:
-    """One ride drawn in the notebook. Colab has no window and no GLFW."""
+    """One ride saved as a temp mp4 and played in the notebook."""
     print(
-        "No desktop window here. Playing one ride in the notebook. "
-        "Arrow keys and the stick window are not available.",
+        "No desktop window here. Saving a short video and playing it below. "
+        "Arrow keys and the stick window are not available. "
+        "The file is removed when this kernel stops.",
         flush=True,
     )
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        raise RuntimeError(
+            "ffmpeg is not installed, so the ride cannot be saved as a video."
+        )
+
     os.environ.setdefault("MUJOCO_GL", "egl")
     duration = min(float(sim.cfg.duration), 8.0)
-    height, width, fps = 240, 320, 8
+    height, width, fps = 720, 1280, 24
+    sim.model.vis.global_.offwidth = max(int(sim.model.vis.global_.offwidth), width)
+    sim.model.vis.global_.offheight = max(int(sim.model.vis.global_.offheight), height)
     renderer = mujoco.Renderer(sim.model, height=height, width=width)
     cam_id = mujoco.mj_name2id(sim.model, mujoco.mjtObj.mjOBJ_CAMERA, "chasis_camera")
     camera = "chasis_camera" if cam_id >= 0 else -1
+
+    fd, path = tempfile.mkstemp(prefix=_RIDE_PREFIX, suffix=".mp4")
+    os.close(fd)
+    log_path = path + ".log"
+    cmd = [
+        ffmpeg, "-y",
+        "-f", "rawvideo",
+        "-vcodec", "rawvideo",
+        "-s", f"{width}x{height}",
+        "-pix_fmt", "rgb24",
+        "-r", str(fps),
+        "-i", "-",
+        "-an",
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        "-crf", "18",
+        "-preset", "veryfast",
+        "-movflags", "+faststart",
+        path,
+    ]
+    log = open(log_path, "w", encoding="utf-8")
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=log)
     frame_dt = 1.0 / fps
     next_frame = 0.0
-    frames: list = []
+    written = 0
+    stdin = proc.stdin
+    assert stdin is not None
     try:
         while float(sim.data.time) < duration:
             step_physics(sim)
-            if float(sim.data.time) + 1e-9 >= next_frame:
-                renderer.update_scene(sim.data, camera=camera)
-                frames.append(renderer.render().copy())
-                next_frame += frame_dt
+            if float(sim.data.time) + 1e-9 < next_frame:
+                continue
+            frame = renderer.render()
+            stdin.write(memoryview(frame).tobytes())
+            written += 1
+            next_frame += frame_dt
+    except BrokenPipeError:
+        written = 0
     finally:
         renderer.close()
+        stdin.close()
+        log.close()
+        return_code = proc.wait()
 
-    if not frames:
-        print("Ride finished with no frames.")
-        return
+    if return_code != 0 or written == 0:
+        detail = ""
+        try:
+            with open(log_path, encoding="utf-8", errors="replace") as fh:
+                detail = fh.read()[-1500:]
+        except OSError:
+            detail = ""
+        for leftover in (path, log_path):
+            try:
+                os.remove(leftover)
+            except OSError:
+                pass
+        raise RuntimeError(
+            "Could not write the ride video."
+            + (f"\n{detail}" if detail else "")
+        )
+    try:
+        os.remove(log_path)
+    except OSError:
+        pass
 
-    import matplotlib.pyplot as plt
-    from IPython.display import HTML, display
-    from matplotlib import animation
+    from IPython.display import Video, display
 
-    fig, ax = plt.subplots(figsize=(6, 4.5))
-    ax.axis("off")
-    image = ax.imshow(frames[0])
-
-    def _draw(index: int):
-        image.set_data(frames[index])
-        return (image,)
-
-    anim = animation.FuncAnimation(
-        fig,
-        _draw,
-        frames=len(frames),
-        interval=1000.0 / fps,
-        blit=True,
-    )
-    html = anim.to_jshtml()
-    plt.close(fig)
-    display(HTML(html))
+    display(Video(path, embed=True, width=960, html_attributes="controls"))
     print(f"Ride finished ({duration:.1f}s).", flush=True)
 
 
