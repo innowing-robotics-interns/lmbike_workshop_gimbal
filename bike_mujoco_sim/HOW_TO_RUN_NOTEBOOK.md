@@ -1,15 +1,17 @@
 # How to run the notebook server
 
-Start Jupyter from the `bike_mujoco_sim` folder, the one that contains `run_sim.py`. Use the project's virtual environment so the notebooks see MuJoCo, matplotlib, and PyYAML.
+After you have opened `lmbike_workshop_gimbal` in your IDE, open a terminal in that window. In VS Code, choose **Terminal → New Terminal**, or press `` Ctrl+` `` (on macOS, `` Control+` ``). The terminal starts in that folder. In another IDE, open its terminal the same way.
+
+Jupyter has to start from `bike_mujoco_sim`, the folder that contains `run_sim.py`. Use the project's virtual environment so the notebooks see the required packages (MuJoCo, matplotlib, and PyYAML).
 
 First-time package install is in `tutorials/00_setup_and_install.ipynb`. This page is only how to start the server after that environment exists.
 
 ## Linux
 
-From `bike_mujoco_sim`, this is the command that starts the server:
+In that terminal:
 
 ```bash
-cd path/to/bike_mujoco_sim
+cd bike_mujoco_sim
 .venv/bin/python -m jupyter lab
 ```
 
@@ -17,21 +19,25 @@ cd path/to/bike_mujoco_sim
 
 ## macOS
 
+In that terminal:
+
 ```bash
-cd path/to/bike_mujoco_sim
+cd bike_mujoco_sim
 .venv/bin/python -m jupyter lab
 ```
 
-A cell that opens the MuJoCo window needs:
+A cell that opens the MuJoCo window needs this command from that same folder:
 
 ```bash
 mjpython -m jupyter lab
 ```
 
-## Windows PowerShell
+## Windows
+
+In that terminal:
 
 ```powershell
-cd path\to\bike_mujoco_sim
+cd bike_mujoco_sim
 .\.venv\Scripts\Activate.ps1
 python -m jupyter lab
 ```

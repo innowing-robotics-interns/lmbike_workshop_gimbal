@@ -1,50 +1,77 @@
 # Bike workshop
 
-This repository is the workshop package. It has two parts: a MuJoCo bicycle simulation, and the firmware for a phone gimbal. Clone it, then open the folder you are working on.
+This repository is the workshop package. It has two parts: a MuJoCo bicycle simulation, and the firmware for a phone gimbal. Install Git and an editor, clone the repository, then open the folder you are working on.
 
-The clone command is the same on Windows, macOS, and Linux. Install Git first, using the section for your system. The download lands in a new folder named `lmbike_workshop_gimbal`.
+## Install Git
+
+The clone command is the same on Windows, macOS, and Linux. Install Git first, using the section for your system.
+
+### Windows
+
+1. Install Git for Windows from [https://git-scm.com/download/win](https://git-scm.com/download/win). The installer can keep the default options.
+2. Close any terminal that was already open, then open PowerShell or Git Bash so `git` is on the path.
+
+### macOS
+
+1. Open Terminal.
+2. Run `git --version`. If Git is missing, macOS offers the Xcode command-line tools. Install those, then run `git --version` again.
+
+### Linux
+
+Install Git from your package manager.
+
+Debian or Ubuntu:
 
 ```bash
+sudo apt update
+sudo apt install git
+```
+
+Fedora:
+
+```bash
+sudo dnf install git
+```
+
+## Install VS Code
+
+Install [Visual Studio Code](https://code.visualstudio.com/download), or use your preferred IDE.
+
+- **Windows:** download the Windows installer from that page and run it. The default options are fine.
+- **macOS:** download the Mac build, open the archive, and move Visual Studio Code into Applications.
+- **Linux:** download the package for your distribution from that page and install it.
+
+## Clone the repository
+
+The download lands in a new folder named `lmbike_workshop_gimbal`. In a terminal, move to the folder where you want the project, then clone over HTTPS.
+
+Windows (PowerShell), for example:
+
+```powershell
+cd $HOME\Documents
 git clone https://github.com/innowing-robotics-interns/lmbike_workshop_gimbal.git
 cd lmbike_workshop_gimbal
 ```
+
+macOS and Linux:
+
+```bash
+cd ~
+git clone https://github.com/innowing-robotics-interns/lmbike_workshop_gimbal.git
+cd lmbike_workshop_gimbal
+```
+
 
 If this machine already has a GitHub SSH key, use this address instead:
 
 ```bash
 git clone git@github.com:innowing-robotics-interns/lmbike_workshop_gimbal.git
+cd lmbike_workshop_gimbal
 ```
 
-## Windows
+If you do not know what an SSH key is, you do not have one. Use the HTTPS address above it.
 
-1. Install Git for Windows from [https://git-scm.com/download/win](https://git-scm.com/download/win). The installer can keep the default options.
-2. Close any terminal that was already open, then open PowerShell or Git Bash so `git` is on the path.
-3. Move to the folder where you want the project (for example `cd $HOME\Documents`), then run the clone commands above.
-
-## macOS
-
-1. Open Terminal.
-2. Run `git --version`. If Git is missing, macOS offers the Xcode command-line tools. Install those, then run `git --version` again.
-3. `cd` to the folder where you want the project, then run the clone commands above.
-
-## Linux
-
-1. Install Git from your package manager.
-
-   Debian or Ubuntu:
-
-   ```bash
-   sudo apt update
-   sudo apt install git
-   ```
-
-   Fedora:
-
-   ```bash
-   sudo dnf install git
-   ```
-
-2. `cd` to the folder where you want the project, then run the clone commands above.
+Then, open the `lmbike_workshop_gimbal` folder in VS Code, or in your preferred IDE.
 
 ## What the two folders contain
 
